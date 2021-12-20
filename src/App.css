@@ -1,38 +1,116 @@
-.App {
+* {
+  box-sizing: border-box;
+}
+
+body {
+  color: #222222;
+  font-family: "Proxima Nova", "Helvetica", "Arial", sans-serif;
+  font-size: 18px;
+  margin: 0;
+}
+
+main {
+  margin-left: 250px;
+  padding-bottom: 95px;
+}
+
+.container {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 15px;
+}
+
+.controller {
+  margin: 10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.setting {
+  display: flex;
+  position: absolute;
+  background-color: #ddd;
+  flex-direction: column;
+  border-radius: 15px;
+  padding: 10px
+}
+.setting input {
+  margin: 10px;
+}
+
+h1 {
+  font-size: 42px;
+  margin: 18px 0;
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+.btn {
+  background: none;
+  display: inline-block;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  padding: 5px 10px;
+  margin: 2px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 15px;
+  text-decoration: none;
 }
 
-.App-link {
-  color: #61dafb;
+.btn-blue {
+  border-color: #2196f3;
+  color: #2196f3;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.btn-blue:hover {
+  background: #0d8bf2;
+  color: #fff;
+}
+
+.btn-orange {
+  border-color: #f38021;
+  color: #f38021;
+}
+
+.btn-orange:hover {
+  background: #f38021;
+  color: #fff;
+}
+
+input,
+select {
+  padding: 5px 15px;
+  color: #444444;
+}
+
+i {
+  padding-right: 10px;
+}
+
+#search {
+  text-align: center;
+}
+
+#search input {
+  border-radius: 15px;
+  width: 35%;
+}
+
+table {
+  width: 100%;
+  margin: 15px 0;
+  border-collapse: collapse;
+  border: 1px solid #ddd;
+  border-radius: 15px;
+}
+
+tr,
+th,
+td {
+  border: 1px solid #ddd;
+}
+
+th,
+td {
+  padding: 15px;
 }
