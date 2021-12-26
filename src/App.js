@@ -1,22 +1,67 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
-import { getAllFile } from "./services/Services";
+import {
+  getAllFile,
+  uploadFile,
+  downloadFile,
+  deleteFile,
+  changeSetting,
+} from "./services/Services";
 
 function App() {
   const [files, setFiles] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [itemPerPage, setItemPerPage] = useState(4);
+  const [currentPage, setCurrentPage] = useState(null);
+  const [totalPages, setTotalPages] = useState(null);
+  const [maxSize, setMaxSize] = useState(25600);
+  const [allowedType, setAllowedType] = useState("Document/PDF");
 
   useEffect(() => {
-    const fetchFiles = async () => {
-      const data = await getAllFile();
-      setFiles(data);
-    };
-    fetchFiles();
-  }, [search]);
+    fetchFiles(itemPerPage, currentPage);
+  }, [search, currentPage, itemPerPage]);
 
-  console.log(showForm);
+  const fetchFiles = async (itemPerPage, currentPage) => {
+    const data = await getAllFile(itemPerPage, currentPage);
+    setFiles(data.content);
+    setTotalPages(data.totalPages);
+    setCurrentPage(data.number);
+  };
+
+  const onUpload = async () => {
+    await uploadFile(selectedFile);
+    fetchFiles(itemPerPage, currentPage);
+  };
+
+  const onDelete = async (id) => {
+    // eslint-disable-next-line no-restricted-globals
+    if (confirm("Are u sure") === true) {
+      await deleteFile(id);
+      fetchFiles(itemPerPage, currentPage);
+    }
+  };
+
+  const onDownload = async (url, name, id) => {
+    await downloadFile(url, name, id);
+    fetchFiles(itemPerPage, currentPage);
+  };
+
+  const onPrevPage = async () => {
+    await fetchFiles(itemPerPage, currentPage - 1);
+  };
+
+  const onNextPage = async () => {
+    await fetchFiles(itemPerPage, currentPage + 1);
+  };
+
+  const onSaveSetting = async () => {
+    const setting = await changeSetting(maxSize, itemPerPage, allowedType);
+    setAllowedType(setting.mimeTypeAllowed);
+    setMaxSize(setting.maxSize);
+    setItemPerPage(setting.itemPerPage);
+  };
 
   const getRowsData = () => {
     let keys = files.reduce(function (a, e) {
@@ -43,32 +88,6 @@ function App() {
     });
   };
 
-  const SettingForm = () => {
-    return (
-      <div>
-        <form id="add-app" className="setting">
-          <label>Max file size : </label>
-          <input type="text" />
-          <label>Item per page </label>
-          <input type="text" />
-          <label>Allow type</label>
-          <input list="browsers"/>
-          <datalist id="browsers">
-            <option value="Document/PDF" />
-            <option value="Image" />
-          </datalist>
-          <button className="btn btn-blue">
-            <i className="far fa-trash-alt"></i> Save
-          </button>
-        </form>
-      </div>
-    );
-  };
-  const onUpload = () => {
-    console.log('hehe')
-  }
-  const onDelete = () => {};
-  const onDownload = () => {};
   return (
     <div className="container">
       <h1>File Manager</h1>
@@ -87,7 +106,7 @@ function App() {
           <i className="far fa-trash-alt"></i> Setting
         </button>
         <div>
-          <label for="myfile">Select a file:</label>
+          <label htmlFor="myfile">Select a file:</label>
           <input
             type="file"
             id="myfile"
@@ -99,7 +118,37 @@ function App() {
           </button>
         </div>
       </div>
-      {showForm ? <SettingForm /> : null}
+      {showForm ? (
+        <div>
+          <form id="add-app" className="setting">
+            <label>Max file size (KB) : </label>
+            <input
+              type="text"
+              value={maxSize}
+              onChange={(inputEvent) => setMaxSize(inputEvent.target.value)}
+            />
+            <label>Item per page </label>
+            <input
+              type="text"
+              value={itemPerPage}
+              onChange={(inputEvent) => setItemPerPage(inputEvent.target.value)}
+            />
+            <label>Allow type</label>
+            <input
+              list="browsers"
+              value={allowedType}
+              onChange={(inputEvent) => setAllowedType(inputEvent.target.value)}
+            />
+            <datalist id="browsers">
+              <option value="Document/PDF" />
+              <option value="Image" />
+            </datalist>
+            <button className="btn btn-blue" onClick={onSaveSetting}>
+              <i className="far fa-trash-alt"></i> Save
+            </button>
+          </form>
+        </div>
+      ) : null}
 
       <table>
         <thead>
@@ -107,7 +156,7 @@ function App() {
             <th>#</th>
             <th>File Name</th>
             <th>Version</th>
-            <th>File size</th>
+            <th>File size (KB)</th>
             <th>Created Time</th>
             <th>Download</th>
             <th width="210">Actions</th>
@@ -115,19 +164,40 @@ function App() {
         </thead>
         <tbody>{getRowsData()}</tbody>
       </table>
+      <div className="navigation-bar">
+        <button
+          className="btn btn-blue"
+          disabled={currentPage === 0 ? true : false}
+          onClick={onPrevPage}
+        >
+          <i className="far fa-trash-alt"></i> Prev
+        </button>
+        <p>
+          {currentPage + 1}/{totalPages}
+        </p>
+        <button
+          className="btn btn-blue"
+          disabled={currentPage === totalPages - 1 ? true : false}
+          onClick={onNextPage}
+        >
+          <i className="far fa-trash-alt"></i> Next
+        </button>
+      </div>
     </div>
   );
 }
-
 const RenderRow = (props) => {
-  console.log(props);
   return (
     <>
       <>
         <td>{props.data.id}</td>
       </>
       <>
-        {props.idx === 0 ? <td rowSpan={props.rows}>{props.keys}</td> : null}
+        {props.idx === 0 ? (
+          <td className="file-name" rowSpan={props.rows}>
+            {props.keys}
+          </td>
+        ) : null}
         <>
           <td>{props.data.version}</td>
           <td>{props.data.size}</td>
@@ -136,7 +206,13 @@ const RenderRow = (props) => {
           <td>
             <button
               className="btn btn-blue"
-              onClick={() => props.onDownload(props.data.id)}
+              onClick={() =>
+                props.onDownload(
+                  props.data.path,
+                  props.data.name,
+                  props.data.id
+                )
+              }
             >
               <i className="far fa-trash-alt"></i> Download
             </button>

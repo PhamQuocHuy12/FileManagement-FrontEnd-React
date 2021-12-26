@@ -7,6 +7,7 @@ body {
   font-family: "Proxima Nova", "Helvetica", "Arial", sans-serif;
   font-size: 18px;
   margin: 0;
+  justify-content: center;
 }
 
 main {
@@ -113,4 +114,15 @@ td {
 th,
 td {
   padding: 15px;
+}
+
+.navigation-bar {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.file-name {
+  width: 500px;
+  word-break: break-all;
 }
