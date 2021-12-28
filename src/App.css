@@ -23,10 +23,11 @@ main {
 }
 
 .controller {
-  margin: 10px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  background-color: #ddd;
+  padding: 20px;
 }
 .setting {
   display: flex;
@@ -35,6 +36,9 @@ main {
   flex-direction: column;
   border-radius: 15px;
   padding: 10px
+}
+.hidden{
+  display: none;
 }
 .setting input {
   margin: 10px;
@@ -88,18 +92,8 @@ i {
   padding-right: 10px;
 }
 
-#search {
-  text-align: center;
-}
-
-#search input {
-  border-radius: 15px;
-  width: 35%;
-}
-
 table {
   width: 100%;
-  margin: 15px 0;
   border-collapse: collapse;
   border: 1px solid #ddd;
   border-radius: 15px;
@@ -109,17 +103,26 @@ tr,
 th,
 td {
   border: 1px solid #ddd;
+  align-items: center;
 }
 
 th,
 td {
-  padding: 15px;
+  align-items: center;
+  padding: 10px;
+}
+
+td{
+  white-space: nowrap;
+  overflow:hidden;
 }
 
 .navigation-bar {
   display: flex;
   flex-direction: row;
   justify-content: center;
+  background-color: #ddd;
+  padding: 15px;
 }
 
 .file-name {

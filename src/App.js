@@ -1,37 +1,53 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
+import SettingForm from "./components/SettingForm";
 import {
   getAllFile,
   uploadFile,
   downloadFile,
   deleteFile,
-  changeSetting,
+  getSetting,
 } from "./services/Services";
+
+
 
 function App() {
   const [files, setFiles] = useState([]);
-  const [search, setSearch] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
-  const [showForm, setShowForm] = useState(false);
+
+  const [showSetting, setShowSetting] = useState(false);
+
   const [itemPerPage, setItemPerPage] = useState(4);
-  const [currentPage, setCurrentPage] = useState(null);
-  const [totalPages, setTotalPages] = useState(null);
-  const [maxSize, setMaxSize] = useState(25600);
-  const [allowedType, setAllowedType] = useState("Document/PDF");
+  const [maxSize, setMaxSize] = useState(26214400);
+  const [allowedType, setAllowedType] = useState("All");
+
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     fetchFiles(itemPerPage, currentPage);
-  }, [search, currentPage, itemPerPage]);
+    fetchSetting();
+  }, [currentPage, itemPerPage, allowedType, maxSize]);
+
+  const fetchSetting = async () => {
+    const setting = await getSetting();
+
+    setItemPerPage(setting.itemPerPage);
+    setMaxSize(setting.maxSize);
+    setAllowedType(setting.mimeTypeAllowed);
+  }
 
   const fetchFiles = async (itemPerPage, currentPage) => {
-    const data = await getAllFile(itemPerPage, currentPage);
+    let data;
+    data = await getAllFile(itemPerPage, currentPage)
+
     setFiles(data.content);
     setTotalPages(data.totalPages);
     setCurrentPage(data.number);
   };
 
   const onUpload = async () => {
-    await uploadFile(selectedFile);
+    await uploadFile(selectedFile, allowedType, maxSize);
     fetchFiles(itemPerPage, currentPage);
   };
 
@@ -54,13 +70,6 @@ function App() {
 
   const onNextPage = async () => {
     await fetchFiles(itemPerPage, currentPage + 1);
-  };
-
-  const onSaveSetting = async () => {
-    const setting = await changeSetting(maxSize, itemPerPage, allowedType);
-    setAllowedType(setting.mimeTypeAllowed);
-    setMaxSize(setting.maxSize);
-    setItemPerPage(setting.itemPerPage);
   };
 
   const getRowsData = () => {
@@ -91,18 +100,10 @@ function App() {
   return (
     <div className="container">
       <h1>File Manager</h1>
-      <div id="search">
-        <input
-          type="text"
-          placeholder="Search..."
-          onChange={(inputEvent) => setSearch(inputEvent.target.value)}
-        />
-      </div>
       <div className="controller">
         <button
           className="btn btn-orange"
-          onClick={() => setShowForm(!showForm)}
-        >
+          onClick={() => setShowSetting(!showSetting)}>
           <i className="far fa-trash-alt"></i> Setting
         </button>
         <div>
@@ -118,37 +119,15 @@ function App() {
           </button>
         </div>
       </div>
-      {showForm ? (
-        <div>
-          <form id="add-app" className="setting">
-            <label>Max file size (KB) : </label>
-            <input
-              type="text"
-              value={maxSize}
-              onChange={(inputEvent) => setMaxSize(inputEvent.target.value)}
-            />
-            <label>Item per page </label>
-            <input
-              type="text"
-              value={itemPerPage}
-              onChange={(inputEvent) => setItemPerPage(inputEvent.target.value)}
-            />
-            <label>Allow type</label>
-            <input
-              list="browsers"
-              value={allowedType}
-              onChange={(inputEvent) => setAllowedType(inputEvent.target.value)}
-            />
-            <datalist id="browsers">
-              <option value="Document/PDF" />
-              <option value="Image" />
-            </datalist>
-            <button className="btn btn-blue" onClick={onSaveSetting}>
-              <i className="far fa-trash-alt"></i> Save
-            </button>
-          </form>
-        </div>
-      ) : null}
+
+      {showSetting ? <SettingForm
+        maxSize={maxSize}
+        itemPerPage={itemPerPage}
+        allowedType={allowedType}
+        setShowSetting={setShowSetting}
+        fetchSetting={fetchSetting}
+      /> : null}
+
 
       <table>
         <thead>
@@ -156,7 +135,7 @@ function App() {
             <th>#</th>
             <th>File Name</th>
             <th>Version</th>
-            <th>File size (KB)</th>
+            <th>File size</th>
             <th>Created Time</th>
             <th>Download</th>
             <th width="210">Actions</th>
@@ -164,28 +143,31 @@ function App() {
         </thead>
         <tbody>{getRowsData()}</tbody>
       </table>
+
+
       <div className="navigation-bar">
-        <button
-          className="btn btn-blue"
-          disabled={currentPage === 0 ? true : false}
-          onClick={onPrevPage}
-        >
-          <i className="far fa-trash-alt"></i> Prev
-        </button>
-        <p>
-          {currentPage + 1}/{totalPages}
-        </p>
-        <button
-          className="btn btn-blue"
-          disabled={currentPage === totalPages - 1 ? true : false}
-          onClick={onNextPage}
-        >
-          <i className="far fa-trash-alt"></i> Next
-        </button>
-      </div>
+          <button
+            className="btn btn-blue"
+            disabled={currentPage === 0 ? true : false}
+            onClick={onPrevPage}
+          >
+            <i className="far fa-trash-alt"></i> Prev
+          </button>
+          <p>
+            {currentPage + 1}/{totalPages === 0? 1: totalPages}
+          </p>
+          <button
+            className="btn btn-blue"
+            disabled={currentPage === totalPages - 1 ? true : false}
+            onClick={onNextPage}
+          >
+            <i className="far fa-trash-alt"></i> Next
+          </button>
+        </div>
     </div>
   );
 }
+
 const RenderRow = (props) => {
   return (
     <>
@@ -200,8 +182,8 @@ const RenderRow = (props) => {
         ) : null}
         <>
           <td>{props.data.version}</td>
-          <td>{props.data.size}</td>
-          <td>{props.data.createdDateTime}</td>
+          <td>{props.data.size}KB</td>
+          <td>{(props.data.createdDateTime).slice(0, 9)}</td>
           <td>{props.data.numberOfDownLoad}</td>
           <td>
             <button
